@@ -1,5 +1,4 @@
 import React from 'react'
-import { useImmerReducer } from 'use-immer'
 import { useMutation, useQuery } from '@apollo/client'
 import CHAT_MESSAGES from '../../content/chatMessages.json'
 import { Layout } from '../../components/Layout'
@@ -12,81 +11,34 @@ import { SendChatMessageDocument } from './gql/SendChatMessage.generated'
 import { GetChatSessionDocument } from './gql/GetChatSession.generated'
 import { useHasChanged } from '../../hooks/useHasChanged'
 import { Icon } from '../../components/Icon'
-import { MEDIA_CHANNEL_ID, PROGRAM_ID } from '../../constants'
-import { CreateChatSessionDocument } from './gql/CreateChatSession.generated'
-import { ActionType } from '../../types'
-
-type State = {
-  messageDraft: string
-  sessionId: string
-  userId: string
-}
-
-const initialState: State = {
-  messageDraft: '',
-  sessionId: '',
-  userId: '',
-}
-
-enum ActionKey {
-  SET_MESSAGE_DRAFT = 'SET_MESSAGE_DRAFT',
-  SET_SESSION = 'SET_SESSION',
-  SUBMIT_MESSAGE = 'SUBMIT_MESSAGE',
-}
-
-type Action =
-  | ActionType<ActionKey.SET_MESSAGE_DRAFT, string>
-  | ActionType<
-      ActionKey.SET_SESSION,
-      {
-        sessionId: string
-        userId: string
-      }
-    >
-  | ActionType<ActionKey.SUBMIT_MESSAGE, undefined>
-
-const usePageState = (): [State, React.Dispatch<Action>] => {
-  const [state, dispatch] = useImmerReducer<State, Action>((draft, action) => {
-    switch (action.type) {
-      case ActionKey.SET_MESSAGE_DRAFT:
-        draft.messageDraft = action.payload
-        break
-      case ActionKey.SET_SESSION:
-        draft.sessionId = action.payload.sessionId
-        draft.userId = action.payload.userId
-        draft.messageDraft = ''
-        break
-      case ActionKey.SUBMIT_MESSAGE:
-        draft.messageDraft = ''
-        break
-      default:
-    }
-  }, initialState)
-  return [state, dispatch]
-}
+import { usePageSession } from './hooks/usePageSession'
 
 export const HomePage = (): JSX.Element => {
-  const [state, dispatch] = usePageState()
+  const [messageDraft, setMessageDraft] = React.useState<string>('')
   const scrollBodyRef = React.useRef<HTMLDivElement>(null)
-  const [createSession, { loading: isLoadingSession, data: sessionRequest }] =
-    useMutation(CreateChatSessionDocument, {
-      variables: {
-        mediaChannelId: MEDIA_CHANNEL_ID,
-        programId: PROGRAM_ID,
-      },
-    })
-  const sessionId = sessionRequest?.createProgramChatSession?.id ?? ''
+  const {
+    isLoading: isLoadingSession,
+    createSession,
+    sessionId,
+    userId,
+  } = usePageSession({
+    onSessionReset: () => {
+      setMessageDraft('')
+    },
+  })
   const { data } = useQuery(GetChatSessionDocument, {
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
     pollInterval: 1000,
     variables: {
-      sessionId: '',
+      sessionId,
     },
-    skip: !sessionId,
+    skip: !sessionId || !userId,
   })
-  const { session } = data ?? {}
-  const { messages = [], createdById = '' } = session ?? {}
-  const [request, { loading: isLoading }] = useMutation(SendChatMessageDocument)
+  const { messages = [] } = data?.session ?? {}
+  const [request, { loading: isMessageSending }] = useMutation(
+    SendChatMessageDocument
+  )
+  const isLoading = isLoadingSession || isMessageSending
   const handleInitialMessageLinkClick = async (
     message: string
   ): Promise<void> => {
@@ -98,7 +50,7 @@ export const HomePage = (): JSX.Element => {
       variables: {
         message,
         sessionId,
-        anonomousUserId: createdById,
+        anonomousUserId: userId,
       },
     })
   }
@@ -109,28 +61,14 @@ export const HomePage = (): JSX.Element => {
     }
   })
   const handleSubmitMessage = async (): Promise<void> => {
-    if (!state.messageDraft) {
-      return Promise.resolve()
-    }
-    const nextMessage = state.messageDraft
-    dispatch({ type: ActionKey.SUBMIT_MESSAGE })
+    if (!messageDraft) return
+    const nextDraft = messageDraft
+    setMessageDraft('')
     await request({
       variables: {
-        message: nextMessage,
+        message: nextDraft,
         sessionId,
-        anonomousUserId: createdById,
-      },
-    })
-  }
-
-  const handleCreateSession = async (): Promise<void> => {
-    const { data } = await createSession()
-    if (!data) return
-    dispatch({
-      type: ActionKey.SET_SESSION,
-      payload: {
-        sessionId: data.createProgramChatSession.id,
-        userId: data.createProgramChatSession.createdById,
+        anonomousUserId: userId,
       },
     })
   }
@@ -145,7 +83,7 @@ export const HomePage = (): JSX.Element => {
             label: 'New Chat',
             iconKey: Icon.IconKey.AddPlus,
             onClick: () => {
-              handleCreateSession()
+              createSession()
             },
           },
         ]}
@@ -186,11 +124,11 @@ export const HomePage = (): JSX.Element => {
       <Spacer height={4} />
       <div className="p-4 w-full max-w-[800px] self-center">
         <ChatInput
-          value={state.messageDraft}
+          value={messageDraft}
           disabled={isLoading}
           placeholder="Type your message here..."
           onChange={(value) => {
-            dispatch({ type: ActionKey.SET_MESSAGE_DRAFT, payload: value })
+            setMessageDraft(value)
           }}
           onSubmit={() => {
             handleSubmitMessage()

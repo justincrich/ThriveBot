@@ -1,0 +1,6 @@
+query CheckSession($sessionId: String!) {
+  checkSession: session(sessionId: $sessionId) {
+    id
+    createdById
+  }
+}

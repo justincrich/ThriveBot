@@ -3,9 +3,6 @@ mutation CreateChatSession($programId: String!, $mediaChannelId: String) {
     programId: $programId
     mediaChannelId: $mediaChannelId
   ) {
-    createdById
-    id
-    mediaChannelId
-    programId
+    ...SessionFragment
   }
 }
