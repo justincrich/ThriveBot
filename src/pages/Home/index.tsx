@@ -1,4 +1,5 @@
 import React from 'react'
+import { useMutation, useQuery } from '@apollo/client'
 import CHAT_MESSAGES from '../../content/chatMessages.json'
 import { Layout } from '../../components/Layout'
 import { Header } from '../../components/Header'
@@ -6,20 +7,20 @@ import { Spacer } from '../../components/Spacer'
 import { Message } from '../../components/Message'
 import { ChatInput } from '../../components/ChatInput'
 import { ChatMessageType } from '../../gql/types'
-import { useMutation, useQuery } from '@apollo/client'
 import { SendChatMessageDocument } from './SendChatMessage.generated'
 import { GetChatSessionDocument } from './GetChatSession.generated'
 import { useHasChanged } from '../../hooks/useHasChanged'
-import { Icon, IconKey } from '../../components/Icon'
-const sessionId = '6637f4011459a54e3e893a64'
+import { Icon } from '../../components/Icon'
+
 export const HomePage = (): JSX.Element => {
+  const sessionId = ''
   const scrollBodyRef = React.useRef<HTMLDivElement>(null)
   const [draftMessage, setDraftMessage] = React.useState('')
   const { data } = useQuery(GetChatSessionDocument, {
     fetchPolicy: 'network-only',
     pollInterval: 1000,
     variables: {
-      sessionId: sessionId ?? '',
+      sessionId: '',
     },
     skip: !sessionId,
   })
@@ -84,7 +85,7 @@ export const HomePage = (): JSX.Element => {
       <Spacer height={4} />
       <div
         ref={scrollBodyRef}
-        className="flex flex-col h-full w-full overflow-auto items-center"
+        className="px-4 flex flex-col h-full w-full overflow-auto items-center"
       >
         <div className="w-full max-w-[800px]">
           {messages.length ? (
@@ -115,7 +116,7 @@ export const HomePage = (): JSX.Element => {
         </div>
       </div>
       <Spacer height={4} />
-      <div className="w-full max-w-[800px] self-center">
+      <div className="p-4 w-full max-w-[800px] self-center">
         <ChatInput
           value={draftMessage}
           disabled={isLoading}
@@ -126,6 +127,7 @@ export const HomePage = (): JSX.Element => {
           }}
         />
       </div>
+      <Spacer height={4} />
     </Layout>
   )
 }

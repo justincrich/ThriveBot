@@ -4,7 +4,7 @@ export enum Color {
   AccentPrimary = '#FFD531',
   AccentPrimaryDark = '#A17D1C',
   AccentPrimaryLight = '#F5F0DB',
-  AccentSecondary = '#67913F',
+  AccentSecondary = '#315bff',
   Danger = '#F44336',
   DangerLight = '#EF9A9A',
   Warning = '#ffc107',

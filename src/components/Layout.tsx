@@ -5,7 +5,7 @@ export const Layout = (props: {
 }): JSX.Element => {
   const { children } = props
   return (
-    <div className="flex flex-col justify-start items-start p-4 w-full h-full">
+    <div className="flex flex-col justify-start items-start w-full h-full">
       {children}
     </div>
   )

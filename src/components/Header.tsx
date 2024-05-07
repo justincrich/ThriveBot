@@ -19,7 +19,7 @@ export const Header = ({
   actions?: Action[]
 }): JSX.Element => {
   return (
-    <div className="flex flex-row justify-start items-center w-full">
+    <div className="px-4 py-2 flex flex-row justify-start items-center w-full border-[.75px] border-gray-300">
       {logoUri && <img className="h-12 mr-2" src={logoUri} />}
       <span className="h5">{title}</span>
       {actions ? (

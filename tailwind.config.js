@@ -101,7 +101,7 @@ module.exports = {
           '@apply text-[0.6875rem] leading-4 font-medium -tracking-[.01em]': {},
         },
         '.link': {
-          '@apply text-accentText underline font-bold': {},
+          '@apply text-primary underline font-bold': {},
         },
       })
     }),
