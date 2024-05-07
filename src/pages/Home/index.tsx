@@ -76,7 +76,7 @@ export const HomePage = (): JSX.Element => {
   return (
     <Layout>
       <Header
-        title="ThriveBot"
+        title="Faith Crisis Companion"
         logoUri="/logo.png"
         actions={[
           {
