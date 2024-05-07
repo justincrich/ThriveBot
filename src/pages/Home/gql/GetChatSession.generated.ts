@@ -1,4 +1,4 @@
-import * as Types from '../../gql/types';
+import * as Types from '../../../gql/types';
 
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type GetChatSessionQueryVariables = Types.Exact<{

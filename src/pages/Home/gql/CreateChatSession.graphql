@@ -1,0 +1,11 @@
+mutation CreateChatSession($programId: String!, $mediaChannelId: String) {
+  createProgramChatSession(
+    programId: $programId
+    mediaChannelId: $mediaChannelId
+  ) {
+    createdById
+    id
+    mediaChannelId
+    programId
+  }
+}
