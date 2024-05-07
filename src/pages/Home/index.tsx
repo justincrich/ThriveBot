@@ -102,6 +102,7 @@ export const HomePage = (): JSX.Element => {
                   {index !== 0 && <Spacer height={4} />}
                   <Message
                     text={isAI ? message.text.trimStart() : message.text}
+                    isLoading={!message.text}
                     isAi={isAI}
                     onLinkClick={(_index, element) => {
                       console.log('link click', element?.textContent)
@@ -125,12 +126,13 @@ export const HomePage = (): JSX.Element => {
       <div className="p-4 w-full max-w-[800px] self-center">
         <ChatInput
           value={messageDraft}
-          disabled={isLoading}
+          disabled={isLoading || !sessionId}
           placeholder="Type your message here..."
           onChange={(value) => {
             setMessageDraft(value)
           }}
           onSubmit={() => {
+            if (messageDraft.trim() === '') return
             handleSubmitMessage()
           }}
         />
