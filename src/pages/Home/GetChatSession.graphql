@@ -1,0 +1,25 @@
+query GetChatSession($sessionId: String!) {
+  session(sessionId: $sessionId) {
+    id
+    createdAtISO
+    createdById
+    createdBy {
+      id
+      firstName
+      lastName
+      email
+    }
+    isUserAnonymous
+    updatedAtISO
+    messages {
+      id
+      status
+      createdAtISO
+      updatedAtISO
+      type
+      text
+    }
+    programId
+    mediaChannelId
+  }
+}

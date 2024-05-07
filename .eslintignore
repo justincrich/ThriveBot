@@ -1,2 +1,4 @@
 tailwind*
 .eslint*
+./src/**/*.generated.ts
+codegen.ts

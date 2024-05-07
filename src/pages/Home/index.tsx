@@ -4,58 +4,109 @@ import { Layout } from '../../components/Layout'
 import { Header } from '../../components/Header'
 import { Spacer } from '../../components/Spacer'
 import { Message } from '../../components/Message'
-import { TextInput } from '../../components/TextInput'
-import { useImmerReducer } from 'use-immer'
-
-type State = {
-  messages: {
-    text: string
-    isAi: boolean
-  }[]
-  isLoading: boolean
-  error: Error | null
-  draftMessage: string
-}
-
-const initialState: State = {
-  messages: [],
-  isLoading: false,
-  error: null,
-  draftMessage: '',
-}
-
-enum ActionName {
-  SET_DRAFT_VALUE = 'SET_DRAFT_VALUE',
-}
-
-type ActionType<A extends ActionName, P = undefined> = P extends undefined
-  ? { type: A; payload?: undefined }
-  : {
-      type: A
-      payload: P
-    }
-type Action = ActionType<ActionName.SET_DRAFT_VALUE, string>
+import { ChatInput } from '../../components/ChatInput'
+import { ChatMessageType } from '../../gql/types'
+import { useMutation, useQuery } from '@apollo/client'
+import { SendChatMessageDocument } from './SendChatMessage.generated'
+import { GetChatSessionDocument } from './GetChatSession.generated'
+import { useHasChanged } from '../../hooks/useHasChanged'
+import { Icon, IconKey } from '../../components/Icon'
+const sessionId = '6637f4011459a54e3e893a64'
 export const HomePage = (): JSX.Element => {
-  const [state, dispatch] = useImmerReducer<State, Action>((draft, action) => {
-    switch (action.type) {
-      case ActionName.SET_DRAFT_VALUE:
-        draft.draftMessage = action.payload
-        break
-      default:
+  const scrollBodyRef = React.useRef<HTMLDivElement>(null)
+  const [draftMessage, setDraftMessage] = React.useState('')
+  const { data } = useQuery(GetChatSessionDocument, {
+    fetchPolicy: 'network-only',
+    pollInterval: 1000,
+    variables: {
+      sessionId: sessionId ?? '',
+    },
+    skip: !sessionId,
+  })
+  const { session } = data ?? {}
+  const { messages = [], createdById = '' } = session ?? {}
+  const [request, { loading: isLoading }] = useMutation(SendChatMessageDocument)
+  const handleInitialMessageLinkClick = async (
+    message: string
+  ): Promise<void> => {
+    if (message.includes('"Gift of the Mormon Faith Crisis"')) {
+      window.open('https://www.mormonfaithcrisis.com/', '_blank')
+      return
     }
-  }, initialState)
+    await request({
+      variables: {
+        message,
+        sessionId,
+        anonomousUserId: createdById,
+      },
+    })
+  }
+
+  React.useLayoutEffect(() => {
+    if (scrollBodyRef.current) {
+      scrollBodyRef.current.scrollTop = scrollBodyRef.current.scrollHeight
+    }
+  }, [scrollBodyRef])
+  useHasChanged(messages, () => {
+    if (scrollBodyRef.current) {
+      scrollBodyRef.current.scrollTop = scrollBodyRef.current.scrollHeight
+    }
+  })
+  const handleSubmitMessage = async (): Promise<void> => {
+    if (!draftMessage) {
+      return Promise.resolve()
+    }
+    setDraftMessage('')
+    await request({
+      variables: {
+        message: draftMessage,
+        sessionId,
+        anonomousUserId: createdById,
+      },
+    })
+  }
+
   return (
     <Layout>
-      <Header title="Thrive Bot" />
+      <Header
+        title="ThriveBot"
+        logoUri="/logo.png"
+        actions={[
+          {
+            label: 'New Chat',
+            iconKey: Icon.IconKey.AddPlus,
+            onClick: () => {
+              setDraftMessage('')
+            },
+          },
+        ]}
+      />
       <Spacer height={4} />
-      <div className="flex flex-col h-full w-full overflow-auto items-center">
-        <div className=" w-full max-w-[800px]">
-          {state.messages.length ? (
-            <div>hi</div>
+      <div
+        ref={scrollBodyRef}
+        className="flex flex-col h-full w-full overflow-auto items-center"
+      >
+        <div className="w-full max-w-[800px]">
+          {messages.length ? (
+            messages.map((message, index) => {
+              const isAI = message.type === ChatMessageType.Ai
+              return (
+                <React.Fragment key={index}>
+                  {index !== 0 && <Spacer height={4} />}
+                  <Message
+                    text={isAI ? message.text.trimStart() : message.text}
+                    isAi={isAI}
+                    onLinkClick={(_index, element) => {
+                      console.log('link click', element?.textContent)
+                    }}
+                  />
+                </React.Fragment>
+              )
+            })
           ) : (
             <Message
               onLinkClick={(_index, element) => {
-                console.log('link click', element?.textContent)
+                handleInitialMessageLinkClick(element?.textContent ?? '')
               }}
               text={CHAT_MESSAGES.BOT_INTRO_MESSAGE}
               isAi
@@ -64,13 +115,17 @@ export const HomePage = (): JSX.Element => {
         </div>
       </div>
       <Spacer height={4} />
-      <TextInput
-        value={state.draftMessage}
-        placeholder="Type your message here..."
-        onChange={(value) => {
-          dispatch({ type: ActionName.SET_DRAFT_VALUE, payload: value })
-        }}
-      />
+      <div className="w-full max-w-[800px] self-center">
+        <ChatInput
+          value={draftMessage}
+          disabled={isLoading}
+          placeholder="Type your message here..."
+          onChange={setDraftMessage}
+          onSubmit={() => {
+            handleSubmitMessage()
+          }}
+        />
+      </div>
     </Layout>
   )
 }

@@ -21,6 +21,7 @@ module.exports = {
         accent: {
           primary: '#FFD531',
           muted: '#F5F0DB',
+          secondary: '#67913F',
         },
         status: {
           danger: '#F44336',
@@ -35,7 +36,7 @@ module.exports = {
         primary: '#211A0A',
         muted: '#A17D1C',
         inverted: '#fff',
-        accentText: '#AB2117',
+        accentText: '#67913F',
         accentMuted: '#A17D1C',
         bgPrimary: '#FAF7F0',
       },
@@ -100,7 +101,7 @@ module.exports = {
           '@apply text-[0.6875rem] leading-4 font-medium -tracking-[.01em]': {},
         },
         '.link': {
-          '@apply text-accentText underline': {},
+          '@apply text-accentText underline font-bold': {},
         },
       })
     }),

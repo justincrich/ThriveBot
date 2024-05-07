@@ -1,0 +1,23 @@
+mutation SendChatMessage(
+  $anonomousUserId: String!
+  $sessionId: String!
+  $message: String!
+) {
+  submitMessage(
+    anonomousUserId: $anonomousUserId
+    sessionId: $sessionId
+    message: $message
+  ) {
+    messages {
+      text
+      status
+      type
+      id
+    }
+    id
+    createdById
+    programId
+    mediaChannelId
+    createdAtISO
+  }
+}
