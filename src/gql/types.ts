@@ -83,9 +83,7 @@ export type ChatReference = {
   __typename?: 'ChatReference';
   mediaChannel: ProgramMediaChannelType;
   mediaChannelId: Scalars['String']['output'];
-  mediaItemDescription: Scalars['String']['output'];
   mediaItemId: Scalars['String']['output'];
-  mediaItemTitle: Scalars['String']['output'];
   mediaSourceUrl: Scalars['String']['output'];
   programId: Scalars['String']['output'];
 };

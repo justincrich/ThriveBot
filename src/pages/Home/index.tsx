@@ -5,14 +5,33 @@ import { Header } from '../../components/Header'
 import { Spacer } from '../../components/Spacer'
 import { Message } from '../../components/Message'
 import { ChatInput } from '../../components/ChatInput'
-import { ChatMessageType } from '../../gql/types'
+import {
+  ChatMessage,
+  ChatMessageStatus,
+  ChatMessageType,
+} from '../../gql/types'
 import { SendChatMessageDocument } from './gql/SendChatMessage.generated'
-import { GetChatSessionDocument } from './gql/GetChatSession.generated'
+import {
+  GetChatSessionDocument,
+  GetChatSessionQuery,
+} from './gql/GetChatSession.generated'
 import { useHasChanged } from '../../hooks/useHasChanged'
 import { Icon } from '../../components/Icon'
 import { usePageSession } from './hooks/usePageSession'
 import { SystemWelcomeMessage } from '../../components/SystemMessage'
 import { Spinner } from '../../components/Spinner'
+
+type QueryChatMessage = GetChatSessionQuery['session']['messages'][number]
+const getLatestAIMessage = (
+  messages: QueryChatMessage[]
+): QueryChatMessage | null => {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].type === ChatMessageType.Ai) {
+      return messages[i]
+    }
+  }
+  return null
+}
 
 export const HomePage = (): JSX.Element => {
   const [messageDraft, setMessageDraft] = React.useState<string>('')
@@ -27,19 +46,21 @@ export const HomePage = (): JSX.Element => {
       setMessageDraft('')
     },
   })
-  const { data } = useQuery(GetChatSessionDocument, {
-    fetchPolicy: 'no-cache',
-    pollInterval: 1000,
-    variables: {
-      sessionId,
-    },
-    skip: !sessionId || !userId,
-  })
-  const { messages = [] } = data?.session ?? {}
+  const { data, loading: isMessagesLoading } = useQuery(
+    GetChatSessionDocument,
+    {
+      fetchPolicy: 'no-cache',
+      pollInterval: 1000,
+      variables: {
+        sessionId,
+      },
+      skip: !sessionId || !userId,
+    }
+  )
+  const { messages = [] } = data?.session ?? { messages: [] }
   const [request, { loading: isMessageSending }] = useMutation(
     SendChatMessageDocument
   )
-  const isLoading = isLoadingSession || isMessageSending
 
   useHasChanged(messages, () => {
     if (scrollBodyRef.current) {
@@ -59,9 +80,20 @@ export const HomePage = (): JSX.Element => {
     })
   }
 
-  const showIntroLoader = !messages.length && isLoading
-  const showIntroMessage = !isLoading && !messages.length && !showIntroLoader
-  const showMessages = messages.length > 0
+  const latestBotMessage = getLatestAIMessage(messages)
+
+  const isLatestBotMessageLoading =
+    latestBotMessage?.status !== ChatMessageStatus.Complete
+
+  const showMessages = !!messages && messages.length > 0
+  const showLoadingSpinner = isMessagesLoading || isLoadingSession
+  const showIntroMessage = !showLoadingSpinner && messages.length === 0
+  const disableActions =
+    isMessageSending ||
+    !sessionId ||
+    !userId ||
+    isLoadingSession ||
+    isLatestBotMessageLoading
   return (
     <Layout>
       <Header
@@ -83,7 +115,7 @@ export const HomePage = (): JSX.Element => {
         className="px-4 flex flex-col h-full w-full overflow-auto items-center"
       >
         <div className="w-full max-w-[800px]">
-          {showIntroLoader && (
+          {showLoadingSpinner && (
             <div className="z-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <Spinner size={100} />
             </div>
@@ -127,7 +159,7 @@ export const HomePage = (): JSX.Element => {
       <div className="p-4 w-full max-w-[800px] self-center">
         <ChatInput
           value={messageDraft}
-          disabled={isLoading || !sessionId}
+          disabled={disableActions}
           placeholder="Type your message here..."
           onChange={(value) => {
             setMessageDraft(value)
