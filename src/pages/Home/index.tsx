@@ -83,17 +83,13 @@ export const HomePage = (): JSX.Element => {
   const latestBotMessage = getLatestAIMessage(messages)
 
   const isLatestBotMessageLoading =
-    latestBotMessage?.status !== ChatMessageStatus.Complete
+    !!messages.length && latestBotMessage?.status !== ChatMessageStatus.Complete
 
   const showMessages = !!messages && messages.length > 0
   const showLoadingSpinner = isMessagesLoading || isLoadingSession
   const showIntroMessage = !showLoadingSpinner && messages.length === 0
   const disableActions =
-    isMessageSending ||
-    !sessionId ||
-    !userId ||
-    isLoadingSession ||
-    isLatestBotMessageLoading
+    isMessageSending || isLoadingSession || isLatestBotMessageLoading
   return (
     <Layout>
       <Header
