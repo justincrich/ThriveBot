@@ -12,6 +12,7 @@ import { useHasChanged } from '../../hooks/useHasChanged'
 import { Icon } from '../../components/Icon'
 import { usePageSession } from './hooks/usePageSession'
 import { SystemWelcomeMessage } from '../../components/SystemMessage'
+import { Spinner } from '../../components/Spinner'
 
 export const HomePage = (): JSX.Element => {
   const [messageDraft, setMessageDraft] = React.useState<string>('')
@@ -58,6 +59,9 @@ export const HomePage = (): JSX.Element => {
     })
   }
 
+  const showIntroLoader = !messages.length && isLoading
+  const showIntroMessage = !isLoading && !messages.length && !showIntroLoader
+  const showMessages = messages.length > 0
   return (
     <Layout>
       <Header
@@ -79,21 +83,12 @@ export const HomePage = (): JSX.Element => {
         className="px-4 flex flex-col h-full w-full overflow-auto items-center"
       >
         <div className="w-full max-w-[800px]">
-          {messages.length ? (
-            messages.map((message, index) => {
-              const isAI = message.type === ChatMessageType.Ai
-              return (
-                <React.Fragment key={index}>
-                  {index !== 0 && <Spacer height={4} />}
-                  <Message
-                    content={isAI ? message.text.trimStart() : message.text}
-                    isLoading={!message.text}
-                    isAi={isAI}
-                  />
-                </React.Fragment>
-              )
-            })
-          ) : (
+          {showIntroLoader && (
+            <div className="z-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Spinner size={100} />
+            </div>
+          )}
+          {showIntroMessage && (
             <Message
               content={
                 <SystemWelcomeMessage
@@ -111,6 +106,21 @@ export const HomePage = (): JSX.Element => {
               isAi
             />
           )}
+          {showMessages && messages.length
+            ? messages.map((message, index) => {
+                const isAI = message.type === ChatMessageType.Ai
+                return (
+                  <React.Fragment key={index}>
+                    {index !== 0 && <Spacer height={4} />}
+                    <Message
+                      content={isAI ? message.text.trimStart() : message.text}
+                      isLoading={!message.text}
+                      isAi={isAI}
+                    />
+                  </React.Fragment>
+                )
+              })
+            : null}
         </div>
       </div>
       <Spacer height={4} />

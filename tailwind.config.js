@@ -21,6 +21,7 @@ module.exports = {
         accent: {
           primary: '#FFD531',
           muted: '#F5F0DB',
+          dark: '#A17D1C',
           secondary: '#67913F',
         },
         status: {
