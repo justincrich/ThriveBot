@@ -1,6 +1,5 @@
 import React from 'react'
 import { Interweave } from 'interweave'
-import { useAnchorClickHandler } from '../hooks/useAnchorClickHandler'
 import { Spacer } from './Spacer'
 import { Loading } from './Loading'
 
@@ -9,20 +8,16 @@ const HUMAN_STYLES = `bg-accent-muted text-primary`
 
 export const Message = ({
   isAi,
-  text,
+  content,
   isLoading = false,
-  onLinkClick,
 }: {
   name?: string
-  text: string
+  content: string | React.ReactNode
   isLoading?: boolean
   isAi?: boolean
-  onLinkClick?: (index: number, event?: Element) => void
 }): JSX.Element => {
-  const ref = useAnchorClickHandler(onLinkClick)
   return (
     <div
-      ref={ref}
       className={`flex w-full items-start align-start ${isAi ? 'flex-row-reverse' : 'flex-row'}`}
     >
       <Spacer width="fill" />
@@ -31,8 +26,10 @@ export const Message = ({
       >
         {isLoading ? (
           <Loading size={Loading.Size.Small} />
+        ) : typeof content === 'string' ? (
+          <Interweave content={content} />
         ) : (
-          <Interweave className={` `} content={text} />
+          content
         )}
       </div>
       <Spacer height={4} />

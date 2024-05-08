@@ -14,6 +14,7 @@ export function useAnchorClickHandler(
     if (node && callback) {
       const anchors = node.querySelectorAll('a')
       anchors.forEach((element, index) => {
+        if (element.href !== '#') return
         element.href = '#' // Prevent navigation
         const callbackElement = (event: MouseEvent): void =>
           callback(index, element)
