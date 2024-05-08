@@ -42,7 +42,7 @@ export const usePageSession = (args?: {
         if (!nextSessionId) return
         setSearchParams({
           'session-id': nextSessionId,
-          'useer-id': userId,
+          'user-id': userId,
         })
         dispatch((draft) => {
           draft.sessionId = nextSessionId
