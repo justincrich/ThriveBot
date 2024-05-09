@@ -17,7 +17,7 @@ import {
 } from './gql/GetChatSession.generated'
 import { useHasChanged } from '../../hooks/useHasChanged'
 import { Icon } from '../../components/Icon'
-import { usePageSession } from './hooks/usePageSession'
+import { usePageSession } from '../../hooks/usePageSession'
 import { SystemWelcomeMessage } from '../../components/SystemMessage'
 import { Spinner } from '../../components/Spinner'
 

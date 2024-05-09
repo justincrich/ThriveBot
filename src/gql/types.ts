@@ -127,6 +127,7 @@ export type Mutation = {
 
 
 export type MutationCreateProgramChatSessionArgs = {
+  anonomousUserId?: InputMaybe<Scalars['String']['input']>;
   mediaChannelId?: InputMaybe<Scalars['String']['input']>;
   programId: Scalars['String']['input'];
 };

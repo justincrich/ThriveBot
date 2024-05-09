@@ -1,7 +1,12 @@
-mutation CreateChatSession($programId: String!, $mediaChannelId: String) {
+mutation CreateChatSession(
+  $programId: String!
+  $mediaChannelId: String
+  $anonomousUserId: String
+) {
   createProgramChatSession(
     programId: $programId
     mediaChannelId: $mediaChannelId
+    anonomousUserId: $anonomousUserId
   ) {
     ...SessionFragment
   }
