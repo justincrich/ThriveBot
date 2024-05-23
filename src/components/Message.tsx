@@ -27,7 +27,7 @@ export const Message = ({
         {isLoading ? (
           <Loading size={Loading.Size.Small} />
         ) : typeof content === 'string' ? (
-          <Interweave content={content} />
+          <Interweave content={content.replace(/\n/g, '<br>')} />
         ) : (
           content
         )}
