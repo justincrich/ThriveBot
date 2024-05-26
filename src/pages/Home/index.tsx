@@ -5,11 +5,7 @@ import { Header } from '../../components/Header'
 import { Spacer } from '../../components/Spacer'
 import { Message } from '../../components/Message'
 import { ChatInput } from '../../components/ChatInput'
-import {
-  ChatMessage,
-  ChatMessageStatus,
-  ChatMessageType,
-} from '../../gql/types'
+import { ChatMessageStatus, ChatMessageType } from '../../gql/types'
 import { SendChatMessageDocument } from './gql/SendChatMessage.generated'
 import {
   GetChatSessionDocument,
@@ -59,7 +55,14 @@ export const HomePage = (): JSX.Element => {
   )
   const { messages = [] } = data?.session ?? { messages: [] }
   const [request, { loading: isMessageSending }] = useMutation(
-    SendChatMessageDocument
+    SendChatMessageDocument,
+    {
+      variables: {
+        message: messageDraft,
+        sessionId,
+        anonomousUserId: userId,
+      },
+    }
   )
 
   useHasChanged(messages, () => {
@@ -67,13 +70,15 @@ export const HomePage = (): JSX.Element => {
       scrollBodyRef.current.scrollTop = scrollBodyRef.current.scrollHeight
     }
   })
-  const handleSubmitMessage = async (): Promise<void> => {
-    if (!messageDraft) return
-    const nextDraft = messageDraft
+  const handleSubmitMessage = async (nextMessage: string): Promise<void> => {
+    if (!sessionId) {
+      await createSession(nextMessage)
+      return
+    }
     setMessageDraft('')
     await request({
       variables: {
-        message: nextDraft,
+        message: nextMessage,
         sessionId,
         anonomousUserId: userId,
       },
@@ -121,13 +126,7 @@ export const HomePage = (): JSX.Element => {
               content={
                 <SystemWelcomeMessage
                   onQuery={(nextQuery) => {
-                    request({
-                      variables: {
-                        message: nextQuery,
-                        sessionId,
-                        anonomousUserId: userId,
-                      },
-                    })
+                    handleSubmitMessage(nextQuery)
                   }}
                 />
               }
@@ -162,7 +161,7 @@ export const HomePage = (): JSX.Element => {
           }}
           onSubmit={() => {
             if (messageDraft.trim() === '') return
-            handleSubmitMessage()
+            handleSubmitMessage(messageDraft)
           }}
         />
       </div>

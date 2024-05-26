@@ -1,9 +1,15 @@
 import React from 'react'
+import { v4 as uuid } from 'uuid'
 import { useMutation, useQuery } from '@apollo/client'
-import { CreateChatSessionDocument } from '../pages/Home/gql/CreateChatSession.generated'
+import {
+  CreateChatSessionDocument,
+  CreateChatSessionMutation,
+} from '../pages/Home/gql/CreateChatSession.generated'
 import { MEDIA_CHANNEL_ID, PROGRAM_ID } from '../constants'
 import { CheckSessionDocument } from '../pages/Home/gql/CheckSession.generated'
 import { useCookies } from 'react-cookie'
+import { useStatefulCookie } from './useStatefulCookie'
+import { ChatSession } from '../gql/types'
 
 export const usePageSession = (args?: {
   onSessionReset: (sessionId: string, userId: string) => void
@@ -12,13 +18,17 @@ export const usePageSession = (args?: {
   sessionId: string
   userId: string
   error?: Error
-  createSession: () => Promise<void>
+  createSession: (message?: string) => Promise<void>
 } => {
-  const [cookies, setCookie] = useCookies(['__fcb_userId', '__fcb_sessionId'])
+  const { setCookie, cookies } = useStatefulCookie([
+    '__fcb_userId',
+    '__fcb_sessionId',
+  ])
   useQuery(CheckSessionDocument, {
     variables: {
       sessionId: cookies['__fcb_sessionId'],
     },
+    skip: !cookies['__fcb_sessionId'],
     fetchPolicy: 'no-cache',
     onCompleted: (data) => {
       const nextSessionId = data?.checkSession?.id ?? ''
@@ -37,12 +47,12 @@ export const usePageSession = (args?: {
         variables: {
           mediaChannelId: MEDIA_CHANNEL_ID,
           programId: PROGRAM_ID,
-          anonomousUserId: cookies['__fcb_userId'] ?? undefined,
+          anonomousUserId: cookies['__fcb_userId'],
         },
       })
     },
   })
-  const [createSession, { loading, error }] = useMutation(
+  const [createSession, { loading, error, reset }] = useMutation(
     CreateChatSessionDocument,
     {
       variables: {
@@ -60,17 +70,25 @@ export const usePageSession = (args?: {
     }
   )
 
+  React.useEffect(() => {
+    if (!cookies['__fcb_userId']) {
+      setCookie('__fcb_userId', uuid())
+    }
+  }, [cookies])
+
   return {
     isLoading: loading,
     sessionId: cookies['__fcb_sessionId'] ?? '',
     error,
     userId: cookies['__fcb_userId'] ?? '',
-    createSession: async (): Promise<void> => {
+    createSession: async (message) => {
+      reset()
       await createSession({
         variables: {
           mediaChannelId: MEDIA_CHANNEL_ID,
           programId: PROGRAM_ID,
           anonomousUserId: cookies['__fcb_userId'],
+          message: message,
         },
       })
     },

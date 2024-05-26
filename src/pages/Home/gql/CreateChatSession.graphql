@@ -2,11 +2,13 @@ mutation CreateChatSession(
   $programId: String!
   $mediaChannelId: String
   $anonomousUserId: String
+  $message: String
 ) {
   createProgramChatSession(
     programId: $programId
     mediaChannelId: $mediaChannelId
     anonomousUserId: $anonomousUserId
+    message: $message
   ) {
     ...SessionFragment
   }

@@ -2,12 +2,6 @@ fragment SessionFragment on ChatSession {
   id
   createdAtISO
   createdById
-  createdBy {
-    id
-    firstName
-    lastName
-    email
-  }
   isUserAnonymous
   updatedAtISO
   messages {

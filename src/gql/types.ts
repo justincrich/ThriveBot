@@ -16,6 +16,50 @@ export type Scalars = {
   _FieldSet: { input: any; output: any; }
 };
 
+export enum AgentKey {
+  BrodieAgent = 'BrodieAgent',
+  ProgramAgent = 'ProgramAgent'
+}
+
+export type AgentUser = {
+  __typename?: 'AgentUser';
+  agentKey: AgentKey;
+};
+
+export type Article = {
+  __typename?: 'Article';
+  id: Scalars['String']['output'];
+  mediaChannelType: ProgramMediaChannelType;
+  versions: Array<ArticleVersion>;
+};
+
+export type ArticleSection = {
+  __typename?: 'ArticleSection';
+  file: File;
+  id: Scalars['String']['output'];
+  pageEnd: Scalars['String']['output'];
+  pageStart: Scalars['String']['output'];
+  summary: Scalars['String']['output'];
+  tags: Array<Tag>;
+  title: Scalars['String']['output'];
+};
+
+export type ArticleVersion = {
+  __typename?: 'ArticleVersion';
+  authors: Array<MediaPerson>;
+  externalUrl: Scalars['String']['output'];
+  file: File;
+  id: Scalars['String']['output'];
+  publicationName: Scalars['String']['output'];
+  publishedISODate: Scalars['String']['output'];
+  publisherName: Scalars['String']['output'];
+  referenceDocumentId: Scalars['String']['output'];
+  sections: Array<ArticleSection>;
+  summary: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
 export type Blog = {
   __typename?: 'Blog';
   id: Scalars['String']['output'];
@@ -40,21 +84,25 @@ export type BlogPost = {
 
 export type Book = {
   __typename?: 'Book';
+  authors: Array<MediaPerson>;
   chapters: Array<BookChapter>;
   file: File;
   id: Scalars['String']['output'];
   mediaChannelType: ProgramMediaChannelType;
+  referenceDocumentId: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
 
 export type BookChapter = {
   __typename?: 'BookChapter';
   chapterNumber: Scalars['Float']['output'];
+  file: File;
   id: Scalars['String']['output'];
   summary: Scalars['String']['output'];
-  text: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
+
+export type ChatMember = AgentUser | User;
 
 export type ChatMessage = {
   __typename?: 'ChatMessage';
@@ -81,10 +129,9 @@ export enum ChatMessageType {
 
 export type ChatReference = {
   __typename?: 'ChatReference';
-  mediaChannel: ProgramMediaChannelType;
   mediaChannelId: Scalars['String']['output'];
+  mediaChannelType: ProgramMediaChannelType;
   mediaItemId: Scalars['String']['output'];
-  mediaSourceUrl: Scalars['String']['output'];
   programId: Scalars['String']['output'];
 };
 
@@ -96,9 +143,20 @@ export type ChatSession = {
   id: Scalars['String']['output'];
   isUserAnonymous: Scalars['Boolean']['output'];
   mediaChannelId?: Maybe<Scalars['String']['output']>;
+  memberIds: Array<Scalars['String']['output']>;
+  members: Array<ChatMember>;
   messages: Array<ChatMessage>;
   programId: Scalars['String']['output'];
   updatedAtISO: Scalars['String']['output'];
+};
+
+export type ChatSessionResponse = {
+  __typename?: 'ChatSessionResponse';
+  hasMore: Scalars['Boolean']['output'];
+  items: Array<ChatSession>;
+  limit: Scalars['Int']['output'];
+  start: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
 };
 
 export type File = {
@@ -116,20 +174,50 @@ export type File = {
 
 export enum FileType {
   AudioMpeg = 'AudioMPEG',
-  Pdf = 'PDF'
+  Pdf = 'PDF',
+  Text = 'TEXT'
 }
+
+export type MediaPerson = {
+  __typename?: 'MediaPerson';
+  email: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  organization: Scalars['String']['output'];
+  twitterHandle: Scalars['String']['output'];
+  websiteUrl: Scalars['String']['output'];
+  wikipediaUrl: Scalars['String']['output'];
+};
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createAgentChatSession: ChatSession;
   createProgramChatSession: ChatSession;
+  sendMessageToAgent: ChatSession;
   submitMessage: ChatSession;
+};
+
+
+export type MutationCreateAgentChatSessionArgs = {
+  agentKey: AgentKey;
+  anonomousUserId?: InputMaybe<Scalars['String']['input']>;
+  userMessage?: InputMaybe<Scalars['String']['input']>;
 };
 
 
 export type MutationCreateProgramChatSessionArgs = {
   anonomousUserId?: InputMaybe<Scalars['String']['input']>;
   mediaChannelId?: InputMaybe<Scalars['String']['input']>;
+  message?: InputMaybe<Scalars['String']['input']>;
   programId: Scalars['String']['input'];
+};
+
+
+export type MutationSendMessageToAgentArgs = {
+  agentKey: AgentKey;
+  anonomousUserId: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+  sessionId: Scalars['String']['input'];
 };
 
 
@@ -208,26 +296,31 @@ export type PodcastEpisodePerson = {
 
 export type Program = {
   __typename?: 'Program';
+  /** Articles */
+  articles: Array<Article>;
   /** Blog, if empty no blog */
   blogs: Array<Blog>;
   /** Books, if empty no blog */
   books: Array<Book>;
   id: Scalars['String']['output'];
-  /** index segmentation by media type (optional). Used in vector search as some clients segment index namespace by media type */
-  mediaSegmentation?: Maybe<ProgramMediaChannelType>;
   onboardedAtISO: Scalars['String']['output'];
   /** Podcast, if empty no podcast */
   podcasts: Array<Podcast>;
   programKey: Scalars['String']['output'];
+  tags: Array<Tag>;
   title: Scalars['String']['output'];
   updatedAtISO: Scalars['String']['output'];
+  /** Websites */
+  websites: Array<Website>;
 };
 
 /** Program media channel type */
 export enum ProgramMediaChannelType {
+  Article = 'Article',
   Blog = 'Blog',
   Book = 'Book',
-  Podcast = 'Podcast'
+  Podcast = 'Podcast',
+  Website = 'Website'
 }
 
 export type Query = {
@@ -236,6 +329,7 @@ export type Query = {
   _service: _Service;
   program: Program;
   session: ChatSession;
+  userSessions: ChatSessionResponse;
 };
 
 
@@ -253,6 +347,12 @@ export type QuerySessionArgs = {
   sessionId: Scalars['String']['input'];
 };
 
+
+export type QueryUserSessionsArgs = {
+  anonomousUserId?: InputMaybe<Scalars['String']['input']>;
+  pagination?: InputMaybe<PaginationInput>;
+};
+
 export type RecordingMetadata = {
   __typename?: 'RecordingMetadata';
   confidance: Scalars['Float']['output'];
@@ -260,6 +360,12 @@ export type RecordingMetadata = {
   speaker?: Maybe<Scalars['Float']['output']>;
   speakerConfidance?: Maybe<Scalars['Float']['output']>;
   start: Scalars['Float']['output'];
+};
+
+export type Tag = {
+  __typename?: 'Tag';
+  key: Scalars['String']['output'];
+  title: Scalars['String']['output'];
 };
 
 export type Transcript = {
@@ -290,6 +396,25 @@ export type Utterance = {
   recordingMetadata: RecordingMetadata;
   value: Scalars['String']['output'];
   words: Array<Word>;
+};
+
+export type Webpage = {
+  __typename?: 'Webpage';
+  html: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  updatedAtIsoDate: Scalars['String']['output'];
+};
+
+export type Website = {
+  __typename?: 'Website';
+  id: Scalars['String']['output'];
+  mediaChannelType: ProgramMediaChannelType;
+  pages: Array<Webpage>;
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type Word = {
