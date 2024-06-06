@@ -49,6 +49,7 @@ export const HomePage = (): JSX.Element => {
       pollInterval: 1000,
       variables: {
         sessionId,
+        anonomousUserId: userId,
       },
       skip: !sessionId || !userId,
     }

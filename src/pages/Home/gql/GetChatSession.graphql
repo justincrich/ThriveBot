@@ -1,5 +1,5 @@
-query GetChatSession($sessionId: String!) {
-  session(sessionId: $sessionId) {
+query GetChatSession($sessionId: String!, $anonomousUserId: String) {
+  session(sessionId: $sessionId, anonomousUserId: $anonomousUserId) {
     ...SessionFragment
   }
 }

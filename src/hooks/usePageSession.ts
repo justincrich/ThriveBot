@@ -40,16 +40,7 @@ export const usePageSession = (args?: {
       setCookie('__fcb_sessionId', nextSessionId)
     },
     onError: () => {
-      console.log(
-        `Session invalid, refetching with userId: ${cookies['__fcb_userId']}`
-      )
-      createSession({
-        variables: {
-          mediaChannelId: MEDIA_CHANNEL_ID,
-          programId: PROGRAM_ID,
-          anonomousUserId: cookies['__fcb_userId'],
-        },
-      })
+      console.log(`Session invalid`)
     },
   })
   const [createSession, { loading, error, reset }] = useMutation(
